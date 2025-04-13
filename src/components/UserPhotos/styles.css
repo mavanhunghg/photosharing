@@ -1,0 +1,6 @@
+.MuiCard-root {
+    max-width: 600px;
+  }
+  .MuiCardMedia-root {
+    object-fit: contain;
+  }
