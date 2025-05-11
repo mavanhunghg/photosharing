@@ -1,35 +1,19 @@
-import React from 'react';
-import { AppBar, Toolbar, Typography } from '@mui/material';
-import { useLocation } from 'react-router-dom';
-import models from '../../modelData/models';
-import './styles.css';
+import React from "react";
+import { AppBar, Toolbar, Typography } from "@mui/material";
 
-function TopBar() {
-  const location = useLocation();
-  let context = '';
-
-  // Extract userId and set context
-  const pathParts = location.pathname.split('/');
-  if (pathParts[1] === 'users' && pathParts[2]) {
-    const user = models.userModel(pathParts[2]);
-    context = user ? `${user.first_name} ${user.last_name}` : '';
-  } else if (pathParts[1] === 'photos' && pathParts[2]) {
-    const user = models.userModel(pathParts[2]);
-    context = user ? `Photos of ${user.first_name} ${user.last_name}` : '';
-  }
-
+const TopBar = ({ currentUser }) => {
   return (
-    <AppBar className="topbar-appBar" position="absolute">
+    <AppBar position="static">
       <Toolbar>
-        <Typography variant="h5" color="inherit" style={{ flexGrow: 1 }}>
-          Ma Van Hung
+        <Typography variant="h6" style={{ flexGrow: 1 }}>
+          Ma Van Hung -B22DCCN363
         </Typography>
-        <Typography variant="h5" color="inherit">
-          {context}
+        <Typography variant="h6">
+          {currentUser ? (currentUser.photos ? `Photos of ${currentUser.name}` : currentUser.name) : "Welcome"}
         </Typography>
       </Toolbar>
     </AppBar>
   );
-}
+};
 
 export default TopBar;

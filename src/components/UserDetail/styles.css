@@ -1,3 +1,15 @@
 .MuiBox-root {
     max-width: 600px;
   }
+.photo_link{
+
+  text-decoration: none;
+  color: blue;
+  padding: 15px;
+  margin: 0px;
+  background-color: #e0e0e0;
+  border-radius: 3px;
+  font-weight: 550;
+  margin-top: 15px;
+  
+}

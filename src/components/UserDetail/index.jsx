@@ -1,34 +1,47 @@
-import React from 'react';
-import { Typography, Box, Link } from '@mui/material';
-import { useParams, Link as RouterLink } from 'react-router-dom';
-import models from '../../modelData/models';
-import './styles.css';
+import React, { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import { fetchModel } from "../../lib/fetchModelData";
+import "./styles.css";
 
-function UserDetail() {
+const UserDetail = ({ setCurrentUser }) => {
   const { userId } = useParams();
-  const user = models.userModel(userId);
+  const [user, setUser] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchModel(`/user/${userId}`)
+      .then((data) => {
+        if (data) {
+          setUser(data);
+          setCurrentUser({ name: `${data.first_name} ${data.last_name}` });
+          setError(null);
+        } else {
+          setError("User not found");
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching user details:", err);
+        setError("Failed to fetch user details");
+      });
+  }, [userId, setCurrentUser]);
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
 
   if (!user) {
-    return <Typography>User not found</Typography>;
+    return <div>Loading...</div>;
   }
 
   return (
-    <Box p={2}>
-      <Typography variant="h5">
-        {user.first_name} {user.last_name}
-      </Typography>
-      <Typography>Location: {user.location}</Typography>
-      <Typography>Description: {user.description}</Typography>
-      <Typography>Occupation: {user.occupation}</Typography>
-      <Link
-        component={RouterLink}
-        to={`/photos/${user._id}`}
-        style={{ marginTop: '10px', display: 'inline-block' }}
-      >
-        View Photos
-      </Link>
-    </Box>
+    <div>
+      <h2>{user.first_name} {user.last_name}</h2>
+      <p><strong>Location:</strong> {user.location}</p>
+      <p><strong>Description:</strong> {user.description}</p>
+      <p><strong>Occupation:</strong> {user.occupation}</p>
+      <Link to={`/photos/${userId}`} className="photo_link">View Photos</Link>
+    </div>
   );
-}
+};
 
 export default UserDetail;

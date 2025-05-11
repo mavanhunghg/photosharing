@@ -1,62 +1,71 @@
-import React from 'react';
-import {
-  Typography,
-  Box,
-  Card,
-  CardContent,
-  CardMedia,
-  Link,
-} from '@mui/material';
-import { useParams, Link as RouterLink } from 'react-router-dom';
-import models from '../../modelData/models';
-import './styles.css';
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { fetchModel } from "../../lib/fetchModelData";
 
-function UserPhotos() {
+const UserPhotos = ({ setCurrentUser }) => {
   const { userId } = useParams();
-  const photos = models.photoOfUserModel(userId);
+  const [photos, setPhotos] = useState([]);
+  const [error, setError] = useState(null);
+  const [userName, setUserName] = useState("");
 
-  if (!photos || photos.length === 0) {
-    return <Typography>Không tìm thấy ảnh</Typography>;
+  useEffect(() => {
+
+    fetchModel(`/user/${userId}`)
+      .then((userData) => {
+        if (userData) {
+          setUserName(`${userData.first_name} ${userData.last_name}`);
+          setCurrentUser({ name: `${userData.first_name} ${userData.last_name}`, photos: true });
+        } else {
+          setError("User not found");
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching user details:", err);
+        setError("Failed to fetch user details");
+      });
+
+  
+    fetchModel(`/photosOfUser/${userId}`)
+      .then((data) => {
+        if (data) {
+          setPhotos(data);
+          setError(null);
+        } else {
+          setError("No photos found");
+        }
+      })
+      .catch((err) => {
+        console.error("Error fetching user photos:", err);
+        setError("Failed to fetch user photos");
+      });
+  }, [userId, setCurrentUser]);
+
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (!photos.length) {
+    return <div>No photos available</div>;
   }
 
   return (
-    <Box p={2}>
-      {photos.map(photo => (
-        <Card key={photo._id} style={{ marginBottom: '20px' }}>
-          <CardMedia
-            component="img"
-            height="300"
-            image={`/images/${photo.file_name}`} // Đường dẫn này trỏ đến public/images/
-            alt="Ảnh của người dùng"
-          />
-          <CardContent>
-            <Typography>
-              Ngày tạo: {new Date(photo.date_time).toLocaleString()}
-            </Typography>
-            {photo.comments && photo.comments.length > 0 && (
-              <Box mt={2}>
-                <Typography variant="h6">Bình luận</Typography>
-                {photo.comments.map(comment => (
-                  <Box key={comment._id} mb={1}>
-                    <Typography>
-                      <Link
-                        component={RouterLink}
-                        to={`/users/${comment.user._id}`}
-                      >
-                        {comment.user.first_name} {comment.user.last_name}
-                      </Link>{' '}
-                      ({new Date(comment.date_time).toLocaleString()}):
-                    </Typography>
-                    <Typography>{comment.comment}</Typography>
-                  </Box>
-                ))}
-              </Box>
-            )}
-          </CardContent>
-        </Card>
+    <div>
+      <h2>Photos of {userName}</h2> 
+      {photos.map((photo) => (
+        <div key={photo._id}>
+          <img src={`/images/${photo.file_name}`} alt="User Photo" />
+          <p><strong>Date:</strong> {new Date(photo.date_time).toLocaleString()}</p>
+          <ul>
+            {photo.comments.map((comment) => (
+              <li key={comment._id}>
+                <strong>{comment.user.first_name} {comment.user.last_name}:</strong> {comment.comment}
+              </li>
+            ))}
+          </ul>
+        </div>
       ))}
-    </Box>
+    </div>
   );
-}
+};
 
 export default UserPhotos;
