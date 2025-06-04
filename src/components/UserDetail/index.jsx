@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { fetchModel } from "../../lib/fetchModelData";
 import "./styles.css";
 
 const UserDetail = ({ setCurrentUser }) => {
@@ -9,11 +8,17 @@ const UserDetail = ({ setCurrentUser }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchModel(`/user/${userId}`)
+    fetch(`http://localhost:3000/api/user/${userId}`, {
+      credentials: "include"
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch user details");
+        return res.json();
+      })
       .then((data) => {
         if (data) {
           setUser(data);
-          setCurrentUser({ name: `${data.first_name} ${data.last_name}` });
+          // setCurrentUser({ name: `${data.first_name} ${data.last_name}` });
           setError(null);
         } else {
           setError("User not found");
@@ -23,7 +28,7 @@ const UserDetail = ({ setCurrentUser }) => {
         console.error("Error fetching user details:", err);
         setError("Failed to fetch user details");
       });
-  }, [userId, setCurrentUser]);
+  }, [userId]);
 
   if (error) {
     return <div>Error: {error}</div>;

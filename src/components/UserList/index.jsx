@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchModel } from "../../lib/fetchModelData";
 import "./styles.css"
 
 const UserList = ({ setCurrentUser }) => {
@@ -8,7 +7,13 @@ const UserList = ({ setCurrentUser }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetchModel("/user/list")
+    fetch("http://localhost:3000/api/user/list", {
+      credentials: "include" 
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch user list");
+        return res.json();
+      })
       .then((data) => {
         if (data) {
           setUsers(data);
@@ -37,7 +42,6 @@ const UserList = ({ setCurrentUser }) => {
         <li key={user._id}>
           <Link
             to={`/users/${user._id}`}
-            onClick={() => setCurrentUser({ name: `${user.first_name} ${user.last_name}` })}
             className="user-list-item">
             {user.first_name} {user.last_name}
           </Link>

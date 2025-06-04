@@ -1,20 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { fetchModel } from "../../lib/fetchModelData";
 
-const UserPhotos = ({ setCurrentUser }) => {
+const UserPhotos = ({ currentUser,setCurrentUser }) => {
   const { userId } = useParams();
   const [photos, setPhotos] = useState([]);
   const [error, setError] = useState(null);
   const [userName, setUserName] = useState("");
-
+  const [commentInput, setCommentInput] = useState({})
   useEffect(() => {
-
-    fetchModel(`/user/${userId}`)
+    fetch(`http://localhost:3000/api/user/${userId}`, {
+      credentials: "include"
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch user details");
+        return res.json();
+      })
       .then((userData) => {
         if (userData) {
           setUserName(`${userData.first_name} ${userData.last_name}`);
-          setCurrentUser({ name: `${userData.first_name} ${userData.last_name}`, photos: true });
+          // setCurrentUser({ name: `${userData.first_name} ${userData.last_name}`, photos: true });
         } else {
           setError("User not found");
         }
@@ -24,8 +28,13 @@ const UserPhotos = ({ setCurrentUser }) => {
         setError("Failed to fetch user details");
       });
 
-  
-    fetchModel(`/photosOfUser/${userId}`)
+    fetch(`http://localhost:3000/api/photosOfUser/${userId}`, {
+      credentials: "include"
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch user photos");
+        return res.json();
+      })
       .then((data) => {
         if (data) {
           setPhotos(data);
@@ -47,6 +56,24 @@ const UserPhotos = ({ setCurrentUser }) => {
   if (!photos.length) {
     return <div>No photos available</div>;
   }
+  const handleAddComment = async (photoId) => {
+  const comment = commentInput[photoId];
+  if (!comment) return;
+  await fetch(`http://localhost:3000/api/commentsOfPhoto/${photoId}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+    body: JSON.stringify({ comment }), // chỉ gửi nội dung comment
+  });
+  setCommentInput({ ...commentInput, [photoId]: "" }); // clear input sau khi gửi
+  // Có thể fetch lại ảnh để cập nhật comment mới
+
+  fetch(`http://localhost:3000/api/photosOfUser/${userId}`, {
+    credentials: "include"
+  })
+    .then((res) => res.json())
+    .then((data) => setPhotos(data));
+};
 
   return (
     <div>
@@ -58,10 +85,21 @@ const UserPhotos = ({ setCurrentUser }) => {
           <ul>
             {photo.comments.map((comment) => (
               <li key={comment._id}>
+                <p>{new Date(comment.date_time).toLocaleString()}</p>
                 <strong>{comment.user.first_name} {comment.user.last_name}:</strong> {comment.comment}
               </li>
             ))}
           </ul>
+          <label>
+             Comment
+           <input
+              type="text"
+              value={commentInput[photo._id] || ""}
+              onChange={e => setCommentInput({ ...commentInput, [photo._id]: e.target.value })}/>
+          </label>
+          <button onClick={() => handleAddComment(photo._id)}>Add</button>
+            <br />
+            <br />
         </div>
       ))}
     </div>
